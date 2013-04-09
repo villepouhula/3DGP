@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Module2</title>
+        <style>
+            #container {
+                width: 800px;
+                height: 600px;
+                border: 1px solid;
+            }
+        </style>
+        <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <script src="../lib/three.min.js"></script>
+        
+        <!-- fragment shader code -->
+        <script id="shader-fs" type="x-shader/x-fragment">
+            precision lowp float;
+            varying float vAngle;
+            varying vec4 vColor;
+
+            vec4 color(float a) {
+                //return color as vec
+                return vec4((a*0.004), (a*0.00001), 0.3, 1.0);
+            }
+
+            void main(void) {                
+//                gl_FragColor = color(vAngle);   //using color-function in fragment shader
+                gl_FragColor = vColor;          //using color-function in vertex shader
+            }
+        
+        </script>
+
+        <!-- vertex shader code -->
+        <script id="shader-vs" type="x-shader/x-vertex">
+            attribute float aVertexAngle;
+            uniform mat4 uModelView;
+            uniform mat4 uProjection;
+            uniform float uRadius;
+            varying float vAngle;
+            
+            varying vec4 vColor;
+            
+            //transform function
+            vec4 transform(float a) {
+                    //getting vertex point data from cos and sin calcultaions based on angle (converted to radians)
+                    return vec4(uRadius * cos(radians(a)), uRadius * sin(radians(a)), 0.0, 1.0);
+            }
+            
+            vec4 color(float a) {
+                //return color as 4-vector
+                return vec4((a*0.004), (a*0.00001), 0.3, 1.0);
+            }
+
+            void main(void) {
+   
+                gl_PointSize = 3.0;
+                vAngle = aVertexAngle;
+                gl_Position = uProjection * uModelView * transform(aVertexAngle);
+                vColor = color(aVertexAngle);
+            }
+        </script>
+        <script src="main.js"></script>
+    </head>
+    <body onload="app.Prepare($('#canvas'));">
+        
+        <button id="TRIANGLE_FAN">A Polygon</button>
+        <button id="LINE_LOOP">A Line Loop</button>
+        <button id="POINT">Point Sprites</button>
+        <div id="container">
+            <canvas id="canvas" style="border: none;" width="800" height="600"></canvas>
+        </div>
+    </body>
+
+
+</html>
