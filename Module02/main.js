@@ -208,6 +208,7 @@ var WebGLApp = function() {
 
         // draw stuff on screen from vertices, using triangles and specified index buffer
         that.gl.drawElements(that.gl[that.mode], that.indices.numItems, that.indices.itemSize, 0);
+        
     };
 
     /* ---------- Utility function, allows to compile shaders   ---------- */
