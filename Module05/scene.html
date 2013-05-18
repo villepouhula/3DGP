@@ -1,0 +1,92 @@
+<!doctype HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./lib/jquery-1.9.1.min.js"></script>
+  <script src="./lib/three.js"></script>
+  <script src="./lib/d3.v3.js"></script>
+  <script src="scene.js"></script>
+  <!-- vertex shader for custom lighting --->
+  <script id="light-vs" type="x-shader/x-vertex">
+    
+    //directional light uniforms
+    uniform vec4 u_dirlight_color;
+    uniform vec3 u_dirlight_pos;
+
+    // global ambient
+    uniform vec4  u_ambient;
+
+    
+    varying vec2 v_uv;    
+    varying vec4 v_color;
+    varying vec4 v_world_position;
+    varying vec3 v_normal;
+    varying vec3 v_dir_position;
+    varying vec4 v_dir_color;
+
+    void main() {
+    
+        v_color = u_ambient;
+        v_dir_position = normalize(normalMatrix * u_dirlight_pos);
+        v_dir_color = u_dirlight_color;
+        
+        v_world_position = modelMatrix * vec4(position, 1.0);
+        v_normal = normalize(normalMatrix * normal);
+
+        // pass texcoords
+        v_uv    = uv;
+
+        // compute vertex position 
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1);
+    
+    }
+
+  </script>
+  <!-- fragment shader for custom lighting --->
+  <script id="light-fs" type="x-shader/x-fragment">
+
+    uniform sampler2D map;
+    
+    //uniforms for spotlight
+    uniform vec4 u_spotlight_color;
+    uniform vec3 u_spotlight_pos;
+    uniform vec3 u_spotlight_dir;
+    uniform float u_spotlight_distance;
+    uniform float u_spotlight_intensity;
+    uniform float u_spotlight_exponent;
+
+    //varyings
+    varying vec2 v_uv;
+    varying vec4 v_color;
+    varying vec4 v_world_position;
+    varying vec3 v_normal;
+    varying vec3 v_dir_position;
+    varying vec4 v_dir_color;
+    
+    void main(){
+    
+        //spot light
+        vec4 v_spotlight_color = u_spotlight_color;
+        vec3 v_spotlight_pos = u_spotlight_pos;
+        vec3 v_spotlight_dir = normalize(u_spotlight_dir);
+        float u_spotlight_distance = u_spotlight_distance;
+        float u_spotlight_intensity = u_spotlight_intensity;
+        float u_spotlight_exponent = u_spotlight_exponent;
+               
+        
+        float spotlight_effect = max(pow(dot(v_spotlight_dir, normalize(v_spotlight_pos - v_world_position.xyz)), u_spotlight_exponent),0.0);
+        float distance = length(v_spotlight_pos - v_world_position.xyz);
+        float strength = (u_spotlight_distance / distance);
+        
+        vec4 v_diffuse = (v_dir_color * max(dot(v_normal, v_dir_position), 0.0)) + (spotlight_effect * v_spotlight_color * strength);
+                
+        // combine texel color with received color from vertex shader
+        gl_FragColor = texture2D(map, v_uv) * (v_color * v_diffuse);
+    }
+  </script>
+</head>
+<body>
+<div id="main" style="border: solid 1px;" width="800" height="600"></div>
+<div id="fps" style="position:absolute;width:100px;height:50px;top:10px; left:10px;"></div>
+</body>
+</html>
